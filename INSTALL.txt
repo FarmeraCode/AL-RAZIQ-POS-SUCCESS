@@ -1,0 +1,249 @@
+
+===========================================================
+         AL RAZIQ POS — NEW DEVICE INSTALLATION GUIDE
+         For Shop Owners, Cashiers & IT Staff
+===========================================================
+
+  Follow each step in order. No programming knowledge needed.
+
+-----------------------------------------------------------
+  WHAT YOU NEED BEFORE STARTING
+-----------------------------------------------------------
+
+  - The project folder: al-raziq-pos-main (on USB or shared drive)
+  - Internet connection (only during first-time setup)
+  - Windows 10 or 11 (64-bit)
+  - About 500 MB of free disk space
+
+
+===========================================================
+  STEP 1 — INSTALL NODE.JS  (One-Time Only)
+===========================================================
+
+  Node.js is the engine that runs the POS system.
+  You only install this ONCE per PC.
+
+  1. Open any browser on the new PC.
+
+  2. Go to:   https://nodejs.org
+
+  3. Click the big green button that says "LTS"
+     (Long Term Support).
+
+     IMPORTANT: Make sure the version says v22 or higher
+     (for example: v22.14.0). Do NOT install v18 or v20.
+
+  4. The downloaded file will be named something like:
+         node-v22.14.0-x64.msi
+
+  5. Double-click the downloaded file to start installing.
+
+  6. Click:  Next → Next → Next  (keep all default options).
+
+  7. If asked about "Tools for Native Modules" — SKIP/UNCHECK
+     this option. You do NOT need it.
+
+  8. Click Install, then Finish when done.
+
+
+  --- VERIFY THE INSTALLATION ---
+
+  1. Press:  Windows Key + R
+     Type:   cmd
+     Press:  Enter
+
+  2. In the black window, type:
+         node --version
+     Then press Enter.
+
+  3. You should see something like:   v22.14.0
+
+     If you see a version starting with v22 — SUCCESS!
+     Node.js is installed correctly.
+
+
+===========================================================
+  STEP 2 — COPY THE POS FOLDER TO THIS PC  (One-Time Only)
+===========================================================
+
+  OPTION A — From USB Drive:
+  1. Plug in your USB drive.
+  2. Copy the entire "al-raziq-pos-main" folder to the Desktop.
+  3. Final location should be:
+         C:\Users\[YourName]\Desktop\al-raziq-pos-main\
+
+  OPTION B — From Network / Google Drive / OneDrive:
+  1. Download or copy "al-raziq-pos-main" folder to the Desktop.
+
+  TIP: You can delete the "node_modules" folder before
+  copying — it makes the transfer much faster. It will be
+  recreated automatically in Step 3.
+
+
+===========================================================
+  STEP 3 — INSTALL PROJECT LIBRARIES  (One-Time Only)
+===========================================================
+
+  Internet is required for this step only.
+
+  1. Open File Explorer and go to the "al-raziq-pos-main"
+     folder on the Desktop.
+
+  2. Click on the address bar at the top of the window
+     (where you see the folder path).
+
+  3. Type:   cmd
+     Then press Enter.
+     A black Command Prompt window opens inside that folder.
+
+  4. Type this command and press Enter:
+         npm install
+
+  5. Wait for it to finish. You will see lots of text
+     scrolling — this is completely normal.
+
+  6. When done, you will see a line like:
+         added 450 packages in 30s
+
+  7. Now type this second command and press Enter:
+         npm install --prefix server
+
+  8. Wait for it to finish (usually very fast — only 3 packages).
+
+  DONE! You do not need internet after this step.
+
+
+===========================================================
+  STEP 4 — CREATE THE DESKTOP SHORTCUT  (One-Time Only)
+===========================================================
+
+  This creates the one-click icon on your Desktop so you
+  never need to open a terminal again.
+
+  1. In the same black Command Prompt window, type:
+         powershell -ExecutionPolicy Bypass -File scripts\create-shortcut.ps1
+
+     Then press Enter.
+
+  2. You will see:
+         SUCCESS: Shortcut created on Desktop at C:\Users\...\Open Al Raziq POS.lnk
+
+  3. Close the Command Prompt window.
+
+  4. Look on your Desktop — you will see an icon called
+         "Open Al Raziq POS"
+
+     That's your one-click launcher!
+
+
+===========================================================
+  STEP 5 — ALLOW FIREWALL ACCESS  (For LAN / Multi-Device)
+===========================================================
+
+  This allows other devices (phones, tablets, other PCs)
+  to connect to the POS over WiFi.
+
+  Skip this step if you use the POS on ONE PC only.
+
+  1. Double-click "Open Al Raziq POS" on the Desktop.
+
+  2. A Windows Security Alert popup may appear asking
+     about firewall access.
+
+  3. Check BOTH boxes:
+       - Private networks
+       - Public networks
+
+  4. Click "Allow access".
+
+  This only happens once. After this, LAN devices connect
+  automatically.
+
+
+===========================================================
+  STEP 6 — LAUNCH THE POS  (Every Day Use)
+===========================================================
+
+  From now on, this is ALL you do every single day:
+
+  1. Double-click "Open Al Raziq POS" on the Desktop.
+
+  2. A terminal window opens — do NOT close it.
+     It is running the server in the background.
+
+  3. Your browser opens automatically showing the POS.
+
+  4. The terminal will show your LAN URL, for example:
+         [Al Raziq POS] LAN URLs: http://192.168.1.5:7000
+
+
+  --- CONNECTING OTHER DEVICES (Phones / Tablets / PCs) ---
+
+  On the other device:
+  1. Open any browser.
+  2. Type the LAN URL shown in the terminal.
+         Example:   http://192.168.1.5:7000
+  3. The full POS loads on that device.
+  4. All data is synced in real time automatically.
+
+
+===========================================================
+  HOW TO STOP THE POS
+===========================================================
+
+  - Simply close the black terminal window, OR
+  - Click inside the terminal and press:  Ctrl + C
+
+
+===========================================================
+  TROUBLESHOOTING
+===========================================================
+
+  PROBLEM: "node is not recognized as a command"
+  SOLUTION: Node.js is not installed. Repeat Step 1.
+
+  PROBLEM: Browser shows a blank white page
+  SOLUTION: Wait 30-60 seconds. The UI takes time on first
+            launch. Then refresh the page.
+
+  PROBLEM: Other devices cannot connect on LAN
+  SOLUTION: Open Command Prompt as Administrator and run:
+    netsh advfirewall firewall add rule name="Al Raziq POS" dir=in action=allow protocol=TCP localport=7000
+
+  PROBLEM: "Port 7000 already in use" error
+  SOLUTION: Another instance is running. Close all terminal
+            windows and try launching again.
+
+
+===========================================================
+  YOUR POS DATA — IMPORTANT!
+===========================================================
+
+  All your orders, staff, and settings are saved here:
+
+      C:\Users\[YourName]\.al-raziq-pos\pos.db
+
+  BACK UP THIS FILE REGULARLY!
+  Copy it to a USB drive or cloud storage (Google Drive, etc.)
+
+  To restore data: copy the .db file back to the same location.
+
+
+===========================================================
+  QUICK CHECKLIST — NEW PC SETUP
+===========================================================
+
+  [ ]  Install Node.js v22+ from https://nodejs.org
+  [ ]  Copy "al-raziq-pos-main" folder to Desktop
+  [ ]  Open CMD inside the folder
+  [ ]  Run:   npm install
+  [ ]  Run:   npm install --prefix server
+  [ ]  Run:   powershell -ExecutionPolicy Bypass -File scripts\create-shortcut.ps1
+  [ ]  Double-click "Open Al Raziq POS" icon on Desktop
+  [ ]  Allow Windows Firewall when prompted
+
+  ALL DONE — Your POS is ready to use!
+
+===========================================================
+         Al Raziq POS  |  Requires Node.js v22 or higher
+===========================================================
