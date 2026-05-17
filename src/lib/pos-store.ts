@@ -148,6 +148,11 @@ export type LanSnapshot = {
   expenseCounter: number;
   currentBranchId: string;
   settings: Settings;
+  // room reservation
+  roomCategories: RoomCategory[];
+  rooms: Room[];
+  roomReservations: RoomReservation[];
+  reservationCounter: number;
 };
 
 const LAN_KEYS: (keyof LanSnapshot)[] = [
@@ -174,6 +179,10 @@ const LAN_KEYS: (keyof LanSnapshot)[] = [
   "expenseCounter",
   "currentBranchId",
   "settings",
+  "roomCategories",
+  "rooms",
+  "roomReservations",
+  "reservationCounter",
 ];
 
 export function getLanSnapshot(): LanSnapshot {
@@ -285,6 +294,58 @@ export type StockMove = {
   note?: string;
   createdAt: number;
 };
+
+// ── Room Reservation ──────────────────────────────────────────────────────────
+export type RoomCategory = {
+  id: string;
+  name: string;
+  icon: string;
+  description?: string;
+};
+export type BedSize = "single" | "double" | "queen" | "king" | "twin";
+export type Room = {
+  id: string;
+  name: string;
+  categoryId: string;
+  floor?: string;
+  capacity: number;       // max persons
+  beds: number;
+  bedSize: BedSize;
+  pricePerNight: number;
+  description?: string;
+  amenities?: string[];
+  status: "available" | "occupied" | "maintenance" | "cleaning";
+};
+export type ReservationStatus = "pending" | "confirmed" | "checked-in" | "checked-out" | "cancelled";
+export type RoomReservation = {
+  id: string;
+  number: number;
+  roomId: string;
+  // guest info
+  guestName: string;
+  guestPhone: string;
+  guestEmail?: string;
+  guestAddress?: string;
+  guestIdType?: string;
+  guestIdNumber?: string;
+  // dates
+  checkIn: string;        // ISO date "YYYY-MM-DD"
+  checkOut: string;
+  nights: number;
+  // pricing
+  pricePerNight: number;
+  discount: number;
+  totalAmount: number;
+  paidAmount: number;
+  paymentMethod?: string;
+  // status
+  status: ReservationStatus;
+  notes?: string;
+  staffId?: string;
+  createdAt: number;
+  updatedAt: number;
+};
+
 export type Settings = {
   restaurantName: string;
   ntn?: string;
@@ -360,7 +421,7 @@ const ALL_MODULES = {
   pos: true, kds: true, tables: true, menu: true, inventory: true,
   customers: true, promotions: true, reports: true, fbr: true,
   multiBranch: false, staff: true, shifts: true, expenses: true,
-  orders: true,
+  orders: true, rooms: true,
 };
 
 const tenants: Tenant[] = [
@@ -416,6 +477,11 @@ type State = {
   currentStaffId?: string;
   currentShiftId?: string;
   currentBranchId: string;
+  // room reservation
+  roomCategories: RoomCategory[];
+  rooms: Room[];
+  roomReservations: RoomReservation[];
+  reservationCounter: number;
   // actions
   addOrder: (o: Order) => void;
   updateOrder: (id: string, patch: Partial<Order>) => void;
@@ -455,6 +521,15 @@ type State = {
   updateSettings: (patch: Partial<Settings>) => void;
   setCurrentStaff: (id?: string) => void;
   signInStaff: (pin: string) => Staff | null;
+  // room reservation actions
+  upsertRoomCategory: (c: RoomCategory) => void;
+  deleteRoomCategory: (id: string) => void;
+  upsertRoom: (r: Room) => void;
+  deleteRoom: (id: string) => void;
+  upsertRoomReservation: (r: RoomReservation) => void;
+  deleteRoomReservation: (id: string) => void;
+  checkInReservation: (id: string) => void;
+  checkOutReservation: (id: string) => void;
 };
 
 export const usePos = create<State>()(
@@ -482,6 +557,20 @@ export const usePos = create<State>()(
       returnCounter: 9001,
       expenseCounter: 5001,
       currentBranchId: "b1",
+      // room reservation initial data
+      roomCategories: [
+        { id: "rc1", name: "Standard", icon: "🛏️", description: "Comfortable standard rooms" },
+        { id: "rc2", name: "Deluxe", icon: "✨", description: "Deluxe rooms with premium amenities" },
+        { id: "rc3", name: "Suite", icon: "👑", description: "Luxury suites for special occasions" },
+      ],
+      rooms: [
+        { id: "rm1", name: "Room 101", categoryId: "rc1", floor: "1st", capacity: 2, beds: 1, bedSize: "double", pricePerNight: 3500, status: "available", amenities: ["AC", "TV", "WiFi"] },
+        { id: "rm2", name: "Room 102", categoryId: "rc1", floor: "1st", capacity: 2, beds: 1, bedSize: "queen", pricePerNight: 4000, status: "available", amenities: ["AC", "TV", "WiFi"] },
+        { id: "rm3", name: "Room 201", categoryId: "rc2", floor: "2nd", capacity: 3, beds: 2, bedSize: "double", pricePerNight: 6000, status: "available", amenities: ["AC", "TV", "WiFi", "Mini Bar"] },
+        { id: "rm4", name: "Suite 301", categoryId: "rc3", floor: "3rd", capacity: 4, beds: 2, bedSize: "king", pricePerNight: 12000, status: "available", amenities: ["AC", "TV", "WiFi", "Jacuzzi", "Mini Bar", "Living Area"] },
+      ],
+      roomReservations: [],
+      reservationCounter: 3001,
       settings: {
         restaurantName: "Al Raziq POS",
         ntn: "1234567-8",
@@ -719,9 +808,60 @@ export const usePos = create<State>()(
         if (s) set({ currentStaffId: s.id });
         return s || null;
       },
+      // ── Room Reservation Actions ──────────────────────────────────────────
+      upsertRoomCategory: (c) => set((s) => ({
+        roomCategories: s.roomCategories.find((x) => x.id === c.id)
+          ? s.roomCategories.map((x) => (x.id === c.id ? c : x))
+          : [...s.roomCategories, c],
+      })),
+      deleteRoomCategory: (id) => set((s) => ({
+        roomCategories: s.roomCategories.filter((c) => c.id !== id),
+        rooms: s.rooms.filter((r) => r.categoryId !== id),
+      })),
+      upsertRoom: (r) => set((s) => ({
+        rooms: s.rooms.find((x) => x.id === r.id)
+          ? s.rooms.map((x) => (x.id === r.id ? r : x))
+          : [...s.rooms, r],
+      })),
+      deleteRoom: (id) => set((s) => ({ rooms: s.rooms.filter((r) => r.id !== id) })),
+      upsertRoomReservation: (r) => set((s) => {
+        const exists = s.roomReservations.find((x) => x.id === r.id);
+        const isNew = !exists;
+        // Update room status when confirmed/checked-in
+        let rooms = s.rooms;
+        if (r.status === "checked-in") {
+          rooms = s.rooms.map((rm) => rm.id === r.roomId ? { ...rm, status: "occupied" } : rm);
+        } else if (r.status === "checked-out" || r.status === "cancelled") {
+          rooms = s.rooms.map((rm) => rm.id === r.roomId ? { ...rm, status: "available" } : rm);
+        }
+        return {
+          roomReservations: exists
+            ? s.roomReservations.map((x) => (x.id === r.id ? { ...r, updatedAt: Date.now() } : x))
+            : [{ ...r, number: s.reservationCounter, updatedAt: Date.now() }, ...s.roomReservations],
+          reservationCounter: isNew ? s.reservationCounter + 1 : s.reservationCounter,
+          rooms,
+        };
+      }),
+      deleteRoomReservation: (id) => set((s) => ({ roomReservations: s.roomReservations.filter((r) => r.id !== id) })),
+      checkInReservation: (id) => set((s) => {
+        const res = s.roomReservations.find((x) => x.id === id);
+        if (!res) return {};
+        return {
+          roomReservations: s.roomReservations.map((x) => x.id === id ? { ...x, status: "checked-in", updatedAt: Date.now() } : x),
+          rooms: s.rooms.map((r) => r.id === res.roomId ? { ...r, status: "occupied" } : r),
+        };
+      }),
+      checkOutReservation: (id) => set((s) => {
+        const res = s.roomReservations.find((x) => x.id === id);
+        if (!res) return {};
+        return {
+          roomReservations: s.roomReservations.map((x) => x.id === id ? { ...x, status: "checked-out", updatedAt: Date.now() } : x),
+          rooms: s.rooms.map((r) => r.id === res.roomId ? { ...r, status: "available" } : r),
+        };
+      }),
     }),
     {
-      name: "pos-store-v4",
+      name: "pos-store-v5",
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<State>;
         const base = current as State;
@@ -777,10 +917,10 @@ export const usePos = create<State>()(
         }
         if (next.inventoryItems === undefined) next.inventoryItems = [];
         if (next.inventoryMoves === undefined) next.inventoryMoves = [];
-
-        // One-time migration: if inventoryItems is empty, but items have inventoryCategory,
-        // we COULD migrate them, but the user wants them decoupled.
-        // Let's just ensure the arrays exist.
+        if (!next.roomCategories?.length) next.roomCategories = base.roomCategories;
+        if (!next.rooms?.length) next.rooms = base.rooms;
+        if (next.roomReservations === undefined) next.roomReservations = [];
+        if (!next.reservationCounter) next.reservationCounter = 3001;
         // Never leave the app with no staff (can't unlock) or no owner row
         if (!next.staff?.length || !next.staff.some((x) => x.role === "owner")) {
           next.staff = base.staff;
@@ -804,6 +944,7 @@ export const MODULE_LIST = [
   { key: "staff", label: "Staff & Roles" },
   { key: "shifts", label: "Shifts & Cash Drawer" },
   { key: "expenses", label: "Expenses" },
+  { key: "rooms", label: "Room Reservations" },
   { key: "fbr", label: "FBR POS Integration" },
   { key: "multiBranch", label: "Multi-Branch" },
 ];

@@ -67,5 +67,12 @@ export default defineConfig({
         },
       }),
     ],
+    build: {
+      rollupOptions: {
+        // capacitor-udp-socket is only used in native Capacitor (APK) builds;
+        // it must be excluded from the web bundle to prevent build failures.
+        external: ["capacitor-udp-socket"],
+      },
+    },
   },
 });

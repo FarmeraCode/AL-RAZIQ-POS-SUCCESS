@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { usePos, fmtMoney, type Promotion, type InventoryItem, type Category } from "@/lib/pos-store";
+import type { RoomReservation } from "@/lib/pos-store";
 import { exportCsv, inDateRange, todayIso } from "@/lib/export";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend, LineChart, Line } from "recharts";
 
@@ -8,7 +9,7 @@ export const Route = createFileRoute("/_app/reports")({ component: Reports });
 
 const COLORS = ["var(--primary)", "var(--primary-glow)", "var(--success)", "var(--warning)", "var(--destructive)", "var(--muted-foreground)"];
 
-type Tab = "sales" | "returns" | "inventory" | "expenses" | "items" | "categories" | "payments" | "customers" | "staff" | "hourly" | "shifts" | "promotions";
+type Tab = "sales" | "returns" | "inventory" | "expenses" | "items" | "categories" | "payments" | "customers" | "staff" | "hourly" | "shifts" | "promotions" | "rooms";
 const TABS: { key: Tab; label: string }[] = [
   { key: "sales", label: "Sales" },
   { key: "returns", label: "Sales Returns" },
@@ -22,6 +23,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "shifts", label: "Shifts" },
   { key: "expenses", label: "Expenses" },
   { key: "inventory", label: "Inventory" },
+  { key: "rooms", label: "Room Reservations" },
 ];
 
 function Reports() {
@@ -39,6 +41,11 @@ function Reports() {
     const t = to ? new Date(to + "T23:59:59.999").getTime() : Infinity;
     return s.openedAt >= f && s.openedAt <= t;
   }), [pos.shifts, from, to]);
+  const roomResInRange = useMemo(() => {
+    const f = from || "";
+    const t = to || "9999";
+    return pos.roomReservations.filter(r => r.checkIn >= f && r.checkIn <= t);
+  }, [pos.roomReservations, from, to]);
 
   return (
     <div className="p-4 lg:p-6 space-y-4">
@@ -72,6 +79,7 @@ function Reports() {
       {tab === "expenses" && <ExpensesTab expenses={expensesInRange} settings={settings} />}
       {tab === "inventory" && <InventoryTab inventoryItems={pos.inventoryItems} settings={settings} />}
       {tab === "promotions" && <PromotionsTab orders={ordersInRange} promotions={pos.promotions} settings={settings} />}
+      {tab === "rooms" && <RoomsReportTab reservations={roomResInRange} rooms={pos.rooms} roomCategories={pos.roomCategories} settings={settings} />}
     </div>
   );
 }
@@ -586,6 +594,98 @@ function DataTable({ cols, rows }: { cols: string[]; rows: (string | number)[][]
             : rows.map((r, i) => <tr key={i} className="border-t border-border">{r.map((c, j) => <td key={j} className="p-2.5">{c}</td>)}</tr>)}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function RoomsReportTab({ reservations, rooms, roomCategories, settings }: { reservations: RoomReservation[]; rooms: any[]; roomCategories: any[]; settings: any }) {
+  const active = reservations.filter(r => r.status !== "cancelled");
+  const totalRevenue = active.reduce((s, r) => s + r.totalAmount, 0);
+  const totalPaid = active.reduce((s, r) => s + r.paidAmount, 0);
+  const totalNights = active.reduce((s, r) => s + r.nights, 0);
+  const avgRevenue = active.length ? totalRevenue / active.length : 0;
+
+  const byStatus: Record<string, number> = {};
+  reservations.forEach(r => { byStatus[r.status] = (byStatus[r.status] || 0) + 1; });
+  const statusPie = Object.entries(byStatus).map(([name, value]) => ({ name, value }));
+
+  const byRoom: Record<string, { nights: number; revenue: number }> = {};
+  active.forEach(r => {
+    if (!byRoom[r.roomId]) byRoom[r.roomId] = { nights: 0, revenue: 0 };
+    byRoom[r.roomId].nights += r.nights;
+    byRoom[r.roomId].revenue += r.totalAmount;
+  });
+  const roomRows = Object.entries(byRoom).map(([id, v]) => {
+    const rm = rooms.find(r => r.id === id);
+    const cat = roomCategories.find(c => c.id === rm?.categoryId);
+    return { name: rm?.name ?? id, category: cat?.name ?? "", nights: v.nights, revenue: v.revenue };
+  }).sort((a, b) => b.revenue - a.revenue);
+
+  const exportRows = active.map(r => {
+    const rm = rooms.find(x => x.id === r.roomId);
+    return { number: r.number, guest: r.guestName, phone: r.guestPhone, room: rm?.name ?? "", checkIn: r.checkIn, checkOut: r.checkOut, nights: r.nights, total: r.totalAmount, paid: r.paidAmount, balance: r.totalAmount - r.paidAmount, payment: r.paymentMethod ?? "", status: r.status };
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-card"><div className="text-xs text-muted-foreground">Reservations</div><div className="mt-1 text-xl font-bold">{active.length}</div></div>
+        <div className="rounded-xl border border-border bg-card p-4 shadow-card"><div className="text-xs text-muted-foreground">Total Nights</div><div className="mt-1 text-xl font-bold">{totalNights}</div></div>
+        <div className="rounded-xl border border-border bg-card p-4 shadow-card"><div className="text-xs text-muted-foreground">Total Revenue</div><div className="mt-1 text-xl font-bold text-success">{fmtMoney(totalRevenue, settings.currency)}</div></div>
+        <div className="rounded-xl border border-border bg-card p-4 shadow-card"><div className="text-xs text-muted-foreground">Amount Collected</div><div className="mt-1 text-xl font-bold text-primary">{fmtMoney(totalPaid, settings.currency)}</div></div>
+        <div className="rounded-xl border border-border bg-card p-4 shadow-card"><div className="text-xs text-muted-foreground">Avg / Booking</div><div className="mt-1 text-xl font-bold">{fmtMoney(avgRevenue, settings.currency)}</div></div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <h3 className="font-semibold mb-3">By Status</h3>
+          <div className="h-56">
+            <ResponsiveContainer>
+              <PieChart><Pie data={statusPie} dataKey="value" nameKey="name" outerRadius={90} label>{statusPie.map((_,i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip /><Legend /></PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <h3 className="font-semibold mb-3">Revenue by Room</h3>
+          <div className="h-56">
+            <ResponsiveContainer>
+              <BarChart data={roomRows.slice(0,8)}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={11} /><YAxis stroke="var(--muted-foreground)" fontSize={11} /><Tooltip /><Bar dataKey="revenue" fill="var(--primary)" radius={[6,6,0,0]} /></BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button onClick={() => exportCsv("room_reservations", exportRows)} className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm">Download CSV / Excel</button>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary text-left"><tr>{["#","Guest","Phone","Room","Check-In","Check-Out","Nights","Total","Paid","Balance","Payment","Status"].map(c => <th key={c} className="p-3 whitespace-nowrap">{c}</th>)}</tr></thead>
+          <tbody>
+            {active.length === 0 && <tr><td colSpan={12} className="p-8 text-center text-muted-foreground">No reservations in range.</td></tr>}
+            {active.map(r => {
+              const rm = rooms.find(x => x.id === r.roomId);
+              return (
+                <tr key={r.id} className="border-t border-border">
+                  <td className="p-2.5 font-mono">#{r.number}</td>
+                  <td className="p-2.5 font-medium">{r.guestName}</td>
+                  <td className="p-2.5">{r.guestPhone}</td>
+                  <td className="p-2.5">{rm?.name ?? "—"}</td>
+                  <td className="p-2.5">{r.checkIn}</td>
+                  <td className="p-2.5">{r.checkOut}</td>
+                  <td className="p-2.5 text-center">{r.nights}</td>
+                  <td className="p-2.5">{fmtMoney(r.totalAmount, settings.currency)}</td>
+                  <td className="p-2.5">{fmtMoney(r.paidAmount, settings.currency)}</td>
+                  <td className="p-2.5">{fmtMoney(r.totalAmount - r.paidAmount, settings.currency)}</td>
+                  <td className="p-2.5 capitalize">{r.paymentMethod ?? "—"}</td>
+                  <td className="p-2.5"><span className="px-2 py-0.5 rounded-full text-xs font-medium bg-secondary capitalize">{r.status}</span></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

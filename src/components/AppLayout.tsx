@@ -2,7 +2,7 @@ import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, ShoppingCart, ChefHat, UtensilsCrossed, BookOpen, Package,
   Users, Tag, BarChart3, Settings, Menu as MenuIcon, X,
-  ListOrdered, UserCog, Banknote, Wallet, LogOut, Lock, RotateCcw,
+  ListOrdered, UserCog, Banknote, Wallet, LogOut, Lock, RotateCcw, BedDouble,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePos, staffCanAccess } from "@/lib/pos-store";
@@ -12,6 +12,7 @@ import { startLanSync, pullLanStateOnce } from "@/lib/lan-sync";
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, mod: null as string | null },
   { to: "/pos", label: "POS", icon: ShoppingCart, mod: "pos" },
+  { to: "/rooms", label: "Room Reservations", icon: BedDouble, mod: "rooms" },
   { to: "/kds", label: "Kitchen", icon: ChefHat, mod: "kds" },
   { to: "/tables", label: "Tables", icon: UtensilsCrossed, mod: "tables" },
   { to: "/orders", label: "Orders", icon: ListOrdered, mod: "orders" },
@@ -47,13 +48,15 @@ export function AppLayout() {
   const me = staff.find((s) => s.id === currentStaffId);
 
   // Filter nav by tenant-enabled module AND staff permission.
-  // Owner ("staff" mod allowed implicitly) sees all enabled modules.
-  // "settings" is owner-only by default unless explicitly granted.
+  // Owner sees ALL enabled modules regardless of per-staff permissions.
+  // NOTE: owner check comes first so module flags never hide items from the owner.
   const visibleNav = NAV.filter((n) => {
-    if (n.mod && !settings.modules[n.mod] && n.mod !== "staff" && n.mod !== "settings") return false;
     if (!me) return false;
-    if (me.role === "owner") return true;
-    if (n.mod === "staff" || n.mod === "settings") return false; // owner-only
+    if (me.role === "owner") return true;  // owner sees everything
+    // Non-owners: check module is enabled in tenant settings
+    if (n.mod && !settings.modules[n.mod] && n.mod !== "staff" && n.mod !== "settings") return false;
+    // staff/settings are owner-only
+    if (n.mod === "staff" || n.mod === "settings") return false;
     return staffCanAccess(me, n.mod);
   });
 

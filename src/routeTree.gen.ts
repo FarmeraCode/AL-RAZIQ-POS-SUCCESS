@@ -16,6 +16,7 @@ import { Route as AppTablesRouteImport } from './routes/_app/tables'
 import { Route as AppStaffRouteImport } from './routes/_app/staff'
 import { Route as AppShiftsRouteImport } from './routes/_app/shifts'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppRoomsRouteImport } from './routes/_app/rooms'
 import { Route as AppReturnsRouteImport } from './routes/_app/returns'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppPromotionsRouteImport } from './routes/_app/promotions'
@@ -59,6 +60,11 @@ const AppShiftsRoute = AppShiftsRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRoomsRoute = AppRoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
   getParentRoute: () => AppRoute,
 } as any)
 const AppReturnsRoute = AppReturnsRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/promotions': typeof AppPromotionsRoute
   '/reports': typeof AppReportsRoute
   '/returns': typeof AppReturnsRoute
+  '/rooms': typeof AppRoomsRoute
   '/settings': typeof AppSettingsRoute
   '/shifts': typeof AppShiftsRoute
   '/staff': typeof AppStaffRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/promotions': typeof AppPromotionsRoute
   '/reports': typeof AppReportsRoute
   '/returns': typeof AppReturnsRoute
+  '/rooms': typeof AppRoomsRoute
   '/settings': typeof AppSettingsRoute
   '/shifts': typeof AppShiftsRoute
   '/staff': typeof AppStaffRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/_app/promotions': typeof AppPromotionsRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/returns': typeof AppReturnsRoute
+  '/_app/rooms': typeof AppRoomsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/shifts': typeof AppShiftsRoute
   '/_app/staff': typeof AppStaffRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/promotions'
     | '/reports'
     | '/returns'
+    | '/rooms'
     | '/settings'
     | '/shifts'
     | '/staff'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/promotions'
     | '/reports'
     | '/returns'
+    | '/rooms'
     | '/settings'
     | '/shifts'
     | '/staff'
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/_app/promotions'
     | '/_app/reports'
     | '/_app/returns'
+    | '/_app/rooms'
     | '/_app/settings'
     | '/_app/shifts'
     | '/_app/staff'
@@ -279,6 +291,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/rooms': {
+      id: '/_app/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof AppRoomsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/returns': {
@@ -365,6 +384,7 @@ interface AppRouteChildren {
   AppPromotionsRoute: typeof AppPromotionsRoute
   AppReportsRoute: typeof AppReportsRoute
   AppReturnsRoute: typeof AppReturnsRoute
+  AppRoomsRoute: typeof AppRoomsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppShiftsRoute: typeof AppShiftsRoute
   AppStaffRoute: typeof AppStaffRoute
@@ -384,6 +404,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPromotionsRoute: AppPromotionsRoute,
   AppReportsRoute: AppReportsRoute,
   AppReturnsRoute: AppReturnsRoute,
+  AppRoomsRoute: AppRoomsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppShiftsRoute: AppShiftsRoute,
   AppStaffRoute: AppStaffRoute,

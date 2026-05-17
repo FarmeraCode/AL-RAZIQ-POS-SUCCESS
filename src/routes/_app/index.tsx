@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { usePos, fmtMoney } from "@/lib/pos-store";
 import {
   TrendingUp, Users, DollarSign, ChefHat, ArrowRight,
-  Percent, Receipt, RotateCcw, Wallet, PiggyBank, Coins,
+  Percent, Receipt, RotateCcw, Wallet, PiggyBank, Coins, BedDouble, CalendarCheck,
 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid } from "recharts";
 
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_app/")({
 });
 
 function Dashboard() {
-  const { orders, customers, items, salesReturns, expenses, settings } = usePos();
+  const { orders, customers, items, salesReturns, expenses, settings, rooms, roomReservations } = usePos();
   const isToday = (t: number) => new Date(t).toDateString() === new Date().toDateString();
   // "today" = all non-cancelled orders for the day. Each order keeps its own
   // payment fields, so totals stay consistent with how POS records them.
@@ -61,6 +61,33 @@ function Dashboard() {
   ];
   void Users; void ChefHat; void customers;
 
+  const todayStr = new Date().toISOString().slice(0,10);
+  const availableRooms = rooms.filter(r => r.status === "available").length;
+  const occupiedRooms  = rooms.filter(r => r.status === "occupied").length;
+  const todayCheckIns  = roomReservations.filter(r => r.checkIn  === todayStr && r.status !== "cancelled").length;
+  const todayCheckOuts = roomReservations.filter(r => r.checkOut === todayStr && r.status !== "cancelled").length;
+  const roomRevenue    = roomReservations.filter(r => ["confirmed","checked-in","checked-out"].includes(r.status)).reduce((s,r) => s + r.paidAmount, 0);
+  const pendingBalance = roomReservations.filter(r => ["confirmed","checked-in"].includes(r.status)).reduce((s,r) => s + (r.totalAmount - r.paidAmount), 0);
+
+  // Room revenue last 7 days
+  const roomTrend = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(Date.now() - (6 - i) * 86400000);
+    const ds = d.toISOString().slice(0, 10);
+    const rev = roomReservations
+      .filter(r => r.checkIn === ds && r.status !== "cancelled")
+      .reduce((s, r) => s + r.totalAmount, 0);
+    return { day: d.toLocaleDateString(undefined, { weekday: "short" }), revenue: rev };
+  });
+
+  // Top booked rooms (by number of reservations)
+  const roomBookings: Record<string, number> = {};
+  roomReservations.filter(r => r.status !== "cancelled").forEach(r => {
+    roomBookings[r.roomId] = (roomBookings[r.roomId] || 0) + 1;
+  });
+  const topRooms = Object.entries(roomBookings)
+    .map(([id, count]) => ({ name: (rooms.find(r => r.id === id)?.name ?? id).slice(0, 12), count }))
+    .sort((a, b) => b.count - a.count).slice(0, 6);
+
   return (
     <div className="p-4 lg:p-6 space-y-6">
       <div className="rounded-2xl bg-gradient-hero p-6 lg:p-8 text-primary-foreground shadow-elegant">
@@ -76,6 +103,7 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* ── Existing POS stat boxes (unchanged) ── */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => {
           const Icon = s.icon;
@@ -94,6 +122,42 @@ function Dashboard() {
         })}
       </div>
 
+      {/* ── Room stat boxes (new row, below POS stats) ── */}
+      {rooms.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+            <BedDouble className="h-4 w-4" /> Room Statistics
+          </h3>
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            {[
+              { label: "Rooms Available",    value: availableRooms,                              hint: `${rooms.length} total rooms`,            color: "text-success",     icon: BedDouble },
+              { label: "Rooms Occupied",     value: occupiedRooms,                               hint: "Currently occupied",                    color: "text-destructive", icon: BedDouble },
+              { label: "Check-ins Today",    value: todayCheckIns,                               hint: "Arriving today",                         color: "text-primary",    icon: CalendarCheck },
+              { label: "Check-outs Today",   value: todayCheckOuts,                              hint: "Departing today",                        color: "text-warning",    icon: CalendarCheck },
+              { label: "Revenue Collected",  value: fmtMoney(roomRevenue, cur),                  hint: "All time paid",                          color: "text-success",    icon: DollarSign },
+              { label: "Pending Balance",    value: fmtMoney(pendingBalance, cur),               hint: "Active bookings unpaid",                 color: "text-warning",    icon: Wallet },
+              { label: "Active Bookings",    value: roomReservations.filter(r => ["confirmed","checked-in"].includes(r.status)).length, hint: "Confirmed + checked-in", color: "text-primary", icon: CalendarCheck },
+              { label: "Total Reservations", value: roomReservations.filter(r => r.status !== "cancelled").length, hint: "All time bookings", color: "text-foreground", icon: BedDouble },
+            ].map(s => {
+              const Icon = s.icon;
+              return (
+                <div key={s.label} className="rounded-xl border border-border bg-card p-4 shadow-card">
+                  <div className="flex items-start justify-between">
+                    <div className="text-xs text-muted-foreground">{s.label}</div>
+                    <Icon className={`h-4 w-4 ${s.color}`} />
+                  </div>
+                  <div className="mt-2 text-2xl font-bold">{s.value}</div>
+                  <div className={`mt-1 text-xs ${s.color} flex items-center gap-1`}>
+                    <TrendingUp className="h-3 w-3" /> {s.hint}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Existing charts (Sales 7 days + Top Items) — unchanged ── */}
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-5 shadow-card lg:col-span-2">
           <h3 className="font-semibold mb-4">Sales (Last 7 days)</h3>
@@ -125,6 +189,45 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* ── Room charts (new row, below existing charts) ── */}
+      {rooms.length > 0 && (
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-card lg:col-span-2">
+            <h3 className="font-semibold mb-4 flex items-center gap-2"><BedDouble className="h-4 w-4 text-primary" />Room Revenue (Last 7 days)</h3>
+            <div className="h-64">
+              <ResponsiveContainer>
+                <LineChart data={roomTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="day" stroke="var(--muted-foreground)" fontSize={12} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={12} />
+                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }} />
+                  <Line type="monotone" dataKey="revenue" stroke="var(--success)" strokeWidth={3} dot={{ fill: "var(--success)" }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+            <h3 className="font-semibold mb-4 flex items-center gap-2"><BedDouble className="h-4 w-4 text-primary" />Top Booked Rooms</h3>
+            <div className="h-64">
+              {topRooms.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-sm text-muted-foreground">No bookings yet</div>
+              ) : (
+                <ResponsiveContainer>
+                  <BarChart data={topRooms}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={11} />
+                    <YAxis stroke="var(--muted-foreground)" fontSize={12} />
+                    <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }} />
+                    <Bar dataKey="count" fill="var(--success)" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Recent Orders (unchanged) ── */}
       <div className="rounded-xl border border-border bg-card p-5 shadow-card">
         <h3 className="font-semibold mb-3">Recent Orders</h3>
         {orders.length === 0 ? (
@@ -147,6 +250,69 @@ function Dashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── Bottom row: Today's Sales + Room Overview side by side ── */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Today's Sales summary */}
+        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold flex items-center gap-2"><DollarSign className="h-4 w-4 text-success" />Today's Sales Summary</h3>
+            <Link to="/pos" className="text-xs text-primary hover:underline flex items-center gap-1">Open POS <ArrowRight className="h-3 w-3" /></Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Gross Sales",     value: fmtMoney(totalSales, cur),      color: "text-success" },
+              { label: "Orders",          value: today.length,                    color: "text-primary" },
+              { label: "Gross Profit",    value: fmtMoney(grossProfit, cur),     color: grossProfit >= 0 ? "text-success" : "text-destructive" },
+              { label: "Total Tax",       value: fmtMoney(totalTax, cur),        color: "text-muted-foreground" },
+              { label: "Total Discount",  value: fmtMoney(totalDiscount, cur),   color: "text-warning" },
+              { label: "Total Returns",   value: fmtMoney(totalReturns, cur),    color: "text-destructive" },
+              { label: "Expenses",        value: fmtMoney(totalExpenses, cur),   color: "text-warning" },
+              { label: "Net Profit",      value: fmtMoney(profitAfterExp, cur),  color: profitAfterExp >= 0 ? "text-success" : "text-destructive" },
+            ].map(s => (
+              <div key={s.label} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+                <span className="text-xs text-muted-foreground">{s.label}</span>
+                <span className={`text-sm font-semibold ${s.color}`}>{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Room Overview */}
+        {rooms.length > 0 ? (
+          <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold flex items-center gap-2"><BedDouble className="h-4 w-4 text-primary" />Room Overview</h3>
+              <Link to="/rooms" className="text-xs text-primary hover:underline flex items-center gap-1">Manage Rooms <ArrowRight className="h-3 w-3" /></Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Available Rooms",  value: availableRooms,                    color: "text-success" },
+                { label: "Occupied Rooms",   value: occupiedRooms,                     color: "text-destructive" },
+                { label: "Check-ins Today",  value: todayCheckIns,                     color: "text-primary" },
+                { label: "Check-outs Today", value: todayCheckOuts,                    color: "text-warning" },
+                { label: "Total Rooms",      value: rooms.length,                      color: "text-foreground" },
+                { label: "Active Bookings",  value: roomReservations.filter(r => ["confirmed","checked-in"].includes(r.status)).length, color: "text-primary" },
+                { label: "Revenue Collected",value: fmtMoney(roomRevenue, cur),        color: "text-success" },
+                { label: "Pending Balance",  value: fmtMoney(pendingBalance, cur),     color: "text-warning" },
+              ].map(s => (
+                <div key={s.label} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+                  <span className="text-xs text-muted-foreground">{s.label}</span>
+                  <span className={`text-sm font-semibold ${s.color}`}>{s.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border bg-card p-5 shadow-card flex items-center justify-center">
+            <div className="text-center">
+              <BedDouble className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">No rooms configured yet.</p>
+              <Link to="/rooms" className="mt-2 text-xs text-primary hover:underline">Set up rooms →</Link>
+            </div>
           </div>
         )}
       </div>
