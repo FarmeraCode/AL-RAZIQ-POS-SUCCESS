@@ -1,34 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { usePos, MODULE_LIST } from "@/lib/pos-store";
-import { getServerUrl, setServerUrl, pingServer } from "@/lib/lan-client";
-import { startLanSync, stopLanSync } from "@/lib/lan-sync";
-import { Receipt, Building, CheckCircle2, Smartphone, Printer, Palette, Wifi, ShoppingCart } from "lucide-react";
+import { checkServer, onSyncStatus, pullStateOnce, pushStateNow, type SyncStatus } from "@/lib/sync";
+import { Receipt, Building, CheckCircle2, Smartphone, Printer, Palette, Cloud, ShoppingCart } from "lucide-react";
 
 export const Route = createFileRoute("/_app/settings")({ component: SettingsPage });
 
 function SettingsPage() {
   const { settings, updateSettings } = usePos();
   const [tested, setTested] = useState<string>("");
-  const [serverUrl, setServerUrlState] = useState(getServerUrl() || "");
-  const [serverStatus, setServerStatus] = useState<string>("");
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const [storage, setStorage] = useState<{ storage: string; durable: boolean } | null>(null);
+  const [syncNote, setSyncNote] = useState<string>("");
+
+  useEffect(() => onSyncStatus(setSyncStatus), []);
 
   useEffect(() => {
-    const url = getServerUrl();
-    if (!url) { setServerStatus("Not configured"); return; }
-    pingServer(url).then((ok) => setServerStatus(ok ? "✅ Online" : "❌ Unreachable"));
+    checkServer().then((h) => setStorage(h ? { storage: h.storage, durable: h.durable } : null));
   }, []);
 
-  const saveServer = async () => {
-    const cleaned = serverUrl.trim();
-    if (!cleaned) return;
-    setServerUrl(cleaned);
-    setServerStatus("Testing…");
-    const ok = await pingServer(cleaned);
-    setServerStatus(ok ? "✅ Online" : "❌ Unreachable — check the IP and that the desktop app is running");
-    // Reconnect LAN sync immediately to the newly-saved URL.
-    stopLanSync();
-    startLanSync();
+  const syncNow = async () => {
+    setSyncNote("Syncing…");
+    await pushStateNow();
+    const ok = await pullStateOnce();
+    setSyncNote(ok ? `✅ Synced at ${new Date().toLocaleTimeString()}` : "❌ Server unreachable — data stays on this device");
   };
 
   const testFbr = async () => {
@@ -61,23 +56,29 @@ function SettingsPage() {
         <Field label="Urdu Header (optional)"><input value={settings.receiptHeaderUrdu || ""} onChange={(e) => updateSettings({ receiptHeaderUrdu: e.target.value })} className={inp} dir="rtl" /></Field>
       </Card>
 
-      <Card icon={Wifi} title="LAN Server (for Android cashier app)">
+      <Card icon={Cloud} title="Cloud Sync">
         <p className="text-sm text-muted-foreground -mt-1">
-          On the desktop running the POS, this is auto-set to <code>http://127.0.0.1:7000</code>.
-          On phones, paste the desktop's LAN IP (shown when the desktop app starts), e.g.{" "}
-          <code>http://192.168.1.50:7000</code>.
-          On the <strong>native Android APK</strong> (same shop Wi‑Fi), the app can also{" "}
-          <strong>discover the desktop automatically</strong> over UDP; if that fails, use the URL field below.
+          Every device that opens this website shares the same data — no IP addresses or setup needed.
+          Changes push automatically and other devices pick them up within a few seconds. If the
+          connection drops, the POS keeps working on this device and re-syncs when it returns.
         </p>
-        <Field label="Server URL">
-          <input value={serverUrl} onChange={(e) => setServerUrlState(e.target.value)}
-            placeholder="http://192.168.1.50:7000" className={inp} />
-        </Field>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${SYNC_BADGE[syncStatus]}`}>
+            {SYNC_LABEL[syncStatus]}
+          </span>
+          {storage && (
+            <span className="text-xs text-muted-foreground">
+              Storage: <code>{storage.storage}</code>
+              {storage.durable ? " · persistent" : " · temporary (configure a Redis/KV store for permanent shared data)"}
+            </span>
+          )}
+          {!storage && <span className="text-xs text-muted-foreground">Server not reachable — working offline</span>}
+        </div>
         <div className="flex items-center gap-3">
-          <button onClick={saveServer} className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium">
-            Save & Test
+          <button onClick={syncNow} className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium">
+            Sync now
           </button>
-          <span className="text-sm">{serverStatus}</span>
+          <span className="text-sm">{syncNote}</span>
         </div>
       </Card>
 
@@ -192,6 +193,22 @@ function SettingsPage() {
 }
 
 const inp = "w-full px-3 py-2 rounded-lg border border-input bg-background text-sm";
+
+const SYNC_LABEL: Record<SyncStatus, string> = {
+  idle: "Not started",
+  connecting: "Connecting…",
+  online: "✅ Connected",
+  syncing: "Syncing…",
+  offline: "⚠️ Offline (local only)",
+};
+
+const SYNC_BADGE: Record<SyncStatus, string> = {
+  idle: "bg-secondary text-secondary-foreground",
+  connecting: "bg-secondary text-secondary-foreground",
+  online: "bg-success/10 text-success",
+  syncing: "bg-primary/10 text-primary",
+  offline: "bg-warning/10 text-warning",
+};
 
 function Card({ icon: Icon, title, children }: any) {
   return (

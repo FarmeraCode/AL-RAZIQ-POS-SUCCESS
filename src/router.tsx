@@ -1,13 +1,14 @@
 import { QueryClient } from "@tanstack/react-query";
-import { createHashHistory, createRouter, createMemoryHistory } from "@tanstack/react-router";
+import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 let routerInstance: ReturnType<typeof createRouter> | null = null;
 
-// Initialize history early and explicitly to prevent "Invariant failed" in file:// environments.
-const hashHistory = typeof window !== "undefined" ? createHashHistory() : null;
-const memoryHistory = typeof window !== "undefined" ? null : createMemoryHistory();
-
+/**
+ * Plain SPA router: real browser URLs (`/pos`, `/rooms`, …) rather than the hash
+ * history the old desktop/`file://` shell needed. Deep links work because the host
+ * rewrites unknown paths to `index.html` (see vercel.json).
+ */
 export const getRouter = () => {
   if (routerInstance) return routerInstance;
 
@@ -16,13 +17,10 @@ export const getRouter = () => {
   routerInstance = createRouter({
     routeTree,
     context: { queryClient },
-    // Use hash history for Electron/Android file:// compatibility.
-    history: hashHistory || memoryHistory!,
-    // Explicitly set basepath to '/' as requested.
     basepath: "/",
-    // Hash + static Electron shell: scroll restoration can fight the router; keep off for stable .exe loads.
-    scrollRestoration: false,
+    defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
+    scrollRestoration: true,
   });
 
   return routerInstance;

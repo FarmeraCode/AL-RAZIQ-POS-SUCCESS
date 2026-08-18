@@ -7,7 +7,7 @@ import {
 import { useEffect, useState } from "react";
 import { usePos, staffCanAccess } from "@/lib/pos-store";
 import alRaziqLogo from "@/assets/al-raziq-logo.png";
-import { startLanSync, pullLanStateOnce } from "@/lib/lan-sync";
+import { startCloudSync, pullStateOnce } from "@/lib/sync";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, mod: null as string | null },
@@ -35,9 +35,9 @@ export function AppLayout() {
   const [pin, setPin] = useState("");
   const [pinErr, setPinErr] = useState("");
 
-  // Start LAN sync once (no-op if server URL isn't configured).
+  // Start cloud sync once (degrades to local-only if the API is unreachable).
   useEffect(() => {
-    startLanSync();
+    startCloudSync();
   }, []);
 
   const settings = usePos((s) => s.settings);
@@ -76,9 +76,9 @@ export function AppLayout() {
   const tryPin = async () => {
     setPinErr("");
     try {
-      await pullLanStateOnce();
+      await pullStateOnce();
     } catch {
-      // LAN optional — still allow offline PIN
+      // Sync is optional — still allow offline PIN sign-in
     }
     const s = signInStaff(pin);
     if (s) { setPin(""); setPinErr(""); }

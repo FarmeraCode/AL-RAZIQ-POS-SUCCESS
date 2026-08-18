@@ -11,22 +11,21 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
-import { Route as AppUnlicensedRouteImport } from './routes/_app/unlicensed'
-import { Route as AppTablesRouteImport } from './routes/_app/tables'
-import { Route as AppStaffRouteImport } from './routes/_app/staff'
-import { Route as AppShiftsRouteImport } from './routes/_app/shifts'
-import { Route as AppSettingsRouteImport } from './routes/_app/settings'
-import { Route as AppRoomsRouteImport } from './routes/_app/rooms'
-import { Route as AppReturnsRouteImport } from './routes/_app/returns'
-import { Route as AppReportsRouteImport } from './routes/_app/reports'
-import { Route as AppPromotionsRouteImport } from './routes/_app/promotions'
-import { Route as AppPosRouteImport } from './routes/_app/pos'
-import { Route as AppOrdersRouteImport } from './routes/_app/orders'
-import { Route as AppMenuRouteImport } from './routes/_app/menu'
-import { Route as AppKdsRouteImport } from './routes/_app/kds'
-import { Route as AppInventoryRouteImport } from './routes/_app/inventory'
-import { Route as AppExpensesRouteImport } from './routes/_app/expenses'
 import { Route as AppCustomersRouteImport } from './routes/_app/customers'
+import { Route as AppExpensesRouteImport } from './routes/_app/expenses'
+import { Route as AppInventoryRouteImport } from './routes/_app/inventory'
+import { Route as AppKdsRouteImport } from './routes/_app/kds'
+import { Route as AppMenuRouteImport } from './routes/_app/menu'
+import { Route as AppOrdersRouteImport } from './routes/_app/orders'
+import { Route as AppPosRouteImport } from './routes/_app/pos'
+import { Route as AppPromotionsRouteImport } from './routes/_app/promotions'
+import { Route as AppReportsRouteImport } from './routes/_app/reports'
+import { Route as AppReturnsRouteImport } from './routes/_app/returns'
+import { Route as AppRoomsRouteImport } from './routes/_app/rooms'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppShiftsRouteImport } from './routes/_app/shifts'
+import { Route as AppStaffRouteImport } from './routes/_app/staff'
+import { Route as AppTablesRouteImport } from './routes/_app/tables'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -37,74 +36,9 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppUnlicensedRoute = AppUnlicensedRouteImport.update({
-  id: '/unlicensed',
-  path: '/unlicensed',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppTablesRoute = AppTablesRouteImport.update({
-  id: '/tables',
-  path: '/tables',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppStaffRoute = AppStaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppShiftsRoute = AppShiftsRouteImport.update({
-  id: '/shifts',
-  path: '/shifts',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppRoomsRoute = AppRoomsRouteImport.update({
-  id: '/rooms',
-  path: '/rooms',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppReturnsRoute = AppReturnsRouteImport.update({
-  id: '/returns',
-  path: '/returns',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppReportsRoute = AppReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPromotionsRoute = AppPromotionsRouteImport.update({
-  id: '/promotions',
-  path: '/promotions',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPosRoute = AppPosRouteImport.update({
-  id: '/pos',
-  path: '/pos',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOrdersRoute = AppOrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMenuRoute = AppMenuRouteImport.update({
-  id: '/menu',
-  path: '/menu',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppKdsRoute = AppKdsRouteImport.update({
-  id: '/kds',
-  path: '/kds',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppInventoryRoute = AppInventoryRouteImport.update({
-  id: '/inventory',
-  path: '/inventory',
+const AppCustomersRoute = AppCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
   getParentRoute: () => AppRoute,
 } as any)
 const AppExpensesRoute = AppExpensesRouteImport.update({
@@ -112,9 +46,69 @@ const AppExpensesRoute = AppExpensesRouteImport.update({
   path: '/expenses',
   getParentRoute: () => AppRoute,
 } as any)
-const AppCustomersRoute = AppCustomersRouteImport.update({
-  id: '/customers',
-  path: '/customers',
+const AppInventoryRoute = AppInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppKdsRoute = AppKdsRouteImport.update({
+  id: '/kds',
+  path: '/kds',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMenuRoute = AppMenuRouteImport.update({
+  id: '/menu',
+  path: '/menu',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrdersRoute = AppOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPosRoute = AppPosRouteImport.update({
+  id: '/pos',
+  path: '/pos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPromotionsRoute = AppPromotionsRouteImport.update({
+  id: '/promotions',
+  path: '/promotions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReturnsRoute = AppReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRoomsRoute = AppRoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppShiftsRoute = AppShiftsRouteImport.update({
+  id: '/shifts',
+  path: '/shifts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStaffRoute = AppStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTablesRoute = AppTablesRouteImport.update({
+  id: '/tables',
+  path: '/tables',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -135,7 +129,6 @@ export interface FileRoutesByFullPath {
   '/shifts': typeof AppShiftsRoute
   '/staff': typeof AppStaffRoute
   '/tables': typeof AppTablesRoute
-  '/unlicensed': typeof AppUnlicensedRoute
 }
 export interface FileRoutesByTo {
   '/customers': typeof AppCustomersRoute
@@ -153,7 +146,6 @@ export interface FileRoutesByTo {
   '/shifts': typeof AppShiftsRoute
   '/staff': typeof AppStaffRoute
   '/tables': typeof AppTablesRoute
-  '/unlicensed': typeof AppUnlicensedRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -174,7 +166,6 @@ export interface FileRoutesById {
   '/_app/shifts': typeof AppShiftsRoute
   '/_app/staff': typeof AppStaffRoute
   '/_app/tables': typeof AppTablesRoute
-  '/_app/unlicensed': typeof AppUnlicensedRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -196,7 +187,6 @@ export interface FileRouteTypes {
     | '/shifts'
     | '/staff'
     | '/tables'
-    | '/unlicensed'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/customers'
@@ -214,7 +204,6 @@ export interface FileRouteTypes {
     | '/shifts'
     | '/staff'
     | '/tables'
-    | '/unlicensed'
     | '/'
   id:
     | '__root__'
@@ -234,7 +223,6 @@ export interface FileRouteTypes {
     | '/_app/shifts'
     | '/_app/staff'
     | '/_app/tables'
-    | '/_app/unlicensed'
     | '/_app/'
   fileRoutesById: FileRoutesById
 }
@@ -258,102 +246,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/unlicensed': {
-      id: '/_app/unlicensed'
-      path: '/unlicensed'
-      fullPath: '/unlicensed'
-      preLoaderRoute: typeof AppUnlicensedRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/tables': {
-      id: '/_app/tables'
-      path: '/tables'
-      fullPath: '/tables'
-      preLoaderRoute: typeof AppTablesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/staff': {
-      id: '/_app/staff'
-      path: '/staff'
-      fullPath: '/staff'
-      preLoaderRoute: typeof AppStaffRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/shifts': {
-      id: '/_app/shifts'
-      path: '/shifts'
-      fullPath: '/shifts'
-      preLoaderRoute: typeof AppShiftsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/settings': {
-      id: '/_app/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/rooms': {
-      id: '/_app/rooms'
-      path: '/rooms'
-      fullPath: '/rooms'
-      preLoaderRoute: typeof AppRoomsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/returns': {
-      id: '/_app/returns'
-      path: '/returns'
-      fullPath: '/returns'
-      preLoaderRoute: typeof AppReturnsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/reports': {
-      id: '/_app/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AppReportsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/promotions': {
-      id: '/_app/promotions'
-      path: '/promotions'
-      fullPath: '/promotions'
-      preLoaderRoute: typeof AppPromotionsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/pos': {
-      id: '/_app/pos'
-      path: '/pos'
-      fullPath: '/pos'
-      preLoaderRoute: typeof AppPosRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/orders': {
-      id: '/_app/orders'
-      path: '/orders'
-      fullPath: '/orders'
-      preLoaderRoute: typeof AppOrdersRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/menu': {
-      id: '/_app/menu'
-      path: '/menu'
-      fullPath: '/menu'
-      preLoaderRoute: typeof AppMenuRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/kds': {
-      id: '/_app/kds'
-      path: '/kds'
-      fullPath: '/kds'
-      preLoaderRoute: typeof AppKdsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/inventory': {
-      id: '/_app/inventory'
-      path: '/inventory'
-      fullPath: '/inventory'
-      preLoaderRoute: typeof AppInventoryRouteImport
+    '/_app/customers': {
+      id: '/_app/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof AppCustomersRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/expenses': {
@@ -363,11 +260,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppExpensesRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/customers': {
-      id: '/_app/customers'
-      path: '/customers'
-      fullPath: '/customers'
-      preLoaderRoute: typeof AppCustomersRouteImport
+    '/_app/inventory': {
+      id: '/_app/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AppInventoryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/kds': {
+      id: '/_app/kds'
+      path: '/kds'
+      fullPath: '/kds'
+      preLoaderRoute: typeof AppKdsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/menu': {
+      id: '/_app/menu'
+      path: '/menu'
+      fullPath: '/menu'
+      preLoaderRoute: typeof AppMenuRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orders': {
+      id: '/_app/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AppOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/pos': {
+      id: '/_app/pos'
+      path: '/pos'
+      fullPath: '/pos'
+      preLoaderRoute: typeof AppPosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/promotions': {
+      id: '/_app/promotions'
+      path: '/promotions'
+      fullPath: '/promotions'
+      preLoaderRoute: typeof AppPromotionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reports': {
+      id: '/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/returns': {
+      id: '/_app/returns'
+      path: '/returns'
+      fullPath: '/returns'
+      preLoaderRoute: typeof AppReturnsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/rooms': {
+      id: '/_app/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof AppRoomsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/shifts': {
+      id: '/_app/shifts'
+      path: '/shifts'
+      fullPath: '/shifts'
+      preLoaderRoute: typeof AppShiftsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff': {
+      id: '/_app/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof AppStaffRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/tables': {
+      id: '/_app/tables'
+      path: '/tables'
+      fullPath: '/tables'
+      preLoaderRoute: typeof AppTablesRouteImport
       parentRoute: typeof AppRoute
     }
   }
@@ -389,7 +370,6 @@ interface AppRouteChildren {
   AppShiftsRoute: typeof AppShiftsRoute
   AppStaffRoute: typeof AppStaffRoute
   AppTablesRoute: typeof AppTablesRoute
-  AppUnlicensedRoute: typeof AppUnlicensedRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -409,7 +389,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppShiftsRoute: AppShiftsRoute,
   AppStaffRoute: AppStaffRoute,
   AppTablesRoute: AppTablesRoute,
-  AppUnlicensedRoute: AppUnlicensedRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
@@ -421,13 +400,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

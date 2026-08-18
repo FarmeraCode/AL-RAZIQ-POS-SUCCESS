@@ -1,14 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Outlet,
-  Link,
-  createRootRouteWithContext,
-  HeadContent,
-  Scripts,
-} from "@tanstack/react-router";
+import { Outlet, Link, createRootRouteWithContext } from "@tanstack/react-router";
 import { Component, type ErrorInfo, type ReactNode } from "react";
-
-import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
   return (
@@ -65,12 +57,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             type="button"
             onClick={() => {
               try {
-                window.location.hash = "#/";
-              } catch {
-                /* ignore */
-              }
-              try {
-                window.location.reload();
+                window.location.assign("/");
               } catch {
                 /* ignore */
               }
@@ -86,60 +73,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Al Raziq POS — Restaurant POS Suite" },
-      { name: "description", content: "Al Raziq POS — restaurant point of sale for dine-in, delivery, and retail." },
-      { name: "author", content: "Al Raziq POS" },
-      { property: "og:title", content: "Al Raziq POS" },
-      { property: "og:description", content: "Restaurant POS suite — orders, kitchen, inventory, and reports." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
-    ],
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
-function isStaticSpaShell() {
-  return (
-    typeof window !== "undefined" &&
-    !(window as Window & { $_TSR?: { router?: unknown } }).$_TSR?.router
-  );
-}
-
-function RootShell({ children }: { children: React.ReactNode }) {
-  // Electron / generated `dist/index.html` mounts into `#root` without SSR; avoid nesting `<html>` inside the mount node.
-  if (isStaticSpaShell()) {
-    return (
-      <>
-        {children}
-      </>
-    );
-  }
-  return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
 
 class RootCatchBoundary extends Component<{ children: ReactNode }, { err: Error | null }> {
   state: { err: Error | null } = { err: null };
@@ -160,8 +97,8 @@ class RootCatchBoundary extends Component<{ children: ReactNode }, { err: Error 
           <div className="max-w-lg w-full rounded-xl border border-border bg-card p-6 shadow-card text-center">
             <h1 className="text-lg font-semibold text-foreground">Something went wrong</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              The app hit an unexpected error. You can try reloading. If you are unlicensed, close the app, add{" "}
-              <code className="rounded bg-muted px-1">license.key</code> next to the executable, then open again.
+              The app hit an unexpected error. Try again, or reload the page. Your data is stored in this
+              browser and is not lost by reloading.
             </p>
             <pre className="mt-3 max-h-28 overflow-auto rounded-md border border-border bg-muted p-2 text-left text-xs text-muted-foreground">
               {msg}
