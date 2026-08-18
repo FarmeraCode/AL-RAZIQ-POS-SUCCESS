@@ -1,5 +1,7 @@
-import { readJsonBody, sendJson, type ApiRequest, type ApiResponse } from "./_http";
-import { readState, writeState } from "./_store";
+// NOTE: `.js` specifiers are required — Vercel transpiles each api/*.ts file
+// in place (no bundling), and Node's ESM loader rejects extensionless imports.
+import { readJsonBody, sendJson, type ApiRequest, type ApiResponse } from "./_http.js";
+import { readState, writeState } from "./_store.js";
 
 /**
  * Shared POS snapshot.
